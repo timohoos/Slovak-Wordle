@@ -24,3 +24,4 @@ class SlovakdictSpider(scrapy.Spider):
         else:
             next_letter_url = response.css("a.vybrane + *::attr(href)").get()
             yield scrapy.Request(response.urljoin(next_letter_url))
+
