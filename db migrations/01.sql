@@ -1,0 +1,2 @@
+CREATE TABLE playground (id SERIAL PRIMARY KEY, word VARCHAR(100) NOT NULL);
+CREATE UNIQUE INDEX idx_word ON words(word);
