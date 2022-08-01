@@ -1,0 +1,1 @@
+CREATE TABLE games (session_id VARCHAR(100) PRIMARY KEY, word VARCHAR(100) NOT NULL, guesses VARCHAR(100)[]);
