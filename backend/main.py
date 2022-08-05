@@ -23,26 +23,33 @@ def new_game():
 @bp.post("/guess")
 def guess():
     with current_app.db.connect() as connection:
-
         guess = request.get_json()["guess"].casefold()
-        data = connection.execute("select * from games where session_id = %s", [dummy_sid,]).fetchall()
+        data = connection.execute("select * from games where session_id = %s", [dummy_sid]).fetchall()
         guesses, word = data[0]["guesses"], data[0]["word"]
 
-        if (connection.execute("select count(*) from words where word = %s", [guess,]).fetchall()[0][0]) == 0:
+        game = Game(word)
+        game.add_guesses(guesses)
 
-            game = Game(word, guesses)
-            status = game.get_game_state()
-            status["status"] = "invalid word"
-
-            return status
+        if (connection.execute("select count(*) from words where word = %s", [guess]).fetchall()[0][0]) == 0:
+            return {
+                "status": "invalid word",
+                "game": {
+                    "guesses": game.guesses_state,
+                    "overall_state": game.overall_state
+                }
+            }
 
         connection.execute("update games set guesses = array_append(guesses, %s) where session_id = %s", (guess, dummy_sid))
-        guesses.append(guess)
 
-        game = Game(word, guesses)
-        status = game.get_game_state()
+        game.add_guess(guess)
 
-        return status
+        return {
+            "status": "finished" if game.correct else "ongoing",
+            "game": {
+                "guesses": game.guesses_state,
+                "overall_state": game.overall_state
+            }
+        }
 
 
 def create_app(settings=None):

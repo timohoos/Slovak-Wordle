@@ -46,27 +46,27 @@ def test_guess(app, client):
         response = client.post("/guess", data=json.dumps({"guess": "srnka"}), content_type="application/json")
         assert response.status_code == 200
         assert response.json["status"] == "ongoing"
-        assert response.json["state"]["overall-state"]["a"] == "correct placement"
-        assert response.json["state"]["overall-state"]["r"] == "not present"
-        assert response.json["state"]["overall-state"]["č"] == "not used"
-        assert response.json["state"]["guesses"][0][4] == "correct placement"
+        assert response.json["game"]["overall_state"]["a"] == "correct placement"
+        assert response.json["game"]["overall_state"]["r"] == "not present"
+        assert response.json["game"]["overall_state"]["č"] == "not used"
+        assert response.json["game"]["guesses"][0][4] == "correct placement"
         response = client.post("/guess", data=json.dumps({"guess": "strom"}), content_type="application/json")
         assert response.status_code == 200
         assert response.json["status"] == "invalid word"
-        assert response.json["state"]["overall-state"]["a"] == "correct placement"
+        assert response.json["game"]["overall_state"]["a"] == "correct placement"
         connection.execute("insert into words (word) values (%s)", "alica")
         response = client.post("/guess", data=json.dumps({"guess": "alica"}), content_type="application/json")
         assert response.status_code == 200
         assert response.json["status"] == "ongoing"
-        assert response.json["state"]["guesses"][1][0] == "wrong placement"
-        assert response.json["state"]["overall-state"]["k"] == "correct placement"
+        assert response.json["game"]["guesses"][1][0] == "wrong placement"
+        assert response.json["game"]["overall_state"]["k"] == "correct placement"
         connection.execute("insert into words (word) values (%s)", "slama")
         response = client.post("/guess", data=json.dumps({"guess": "SLAMA"}), content_type="application/json")
         assert response.status_code == 200
         assert response.json["status"] == "ongoing"
-        assert response.json["state"]["overall-state"]["l"] == "not present"
-        assert response.json["state"]["overall-state"]["h"] == "not used"
-        assert response.json["state"]["guesses"][2][2] == "wrong placement"
+        assert response.json["game"]["overall_state"]["l"] == "not present"
+        assert response.json["game"]["overall_state"]["h"] == "not used"
+        assert response.json["game"]["guesses"][2][2] == "wrong placement"
         response = client.post("/guess", data=json.dumps({"guess": "mačka"}), content_type="application/json")
         assert response.status_code == 200
         assert response.json["status"] == "finished"
