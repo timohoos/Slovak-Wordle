@@ -1,0 +1,6 @@
+[database]
+user="wordle"
+password="wordle"
+host="localhost"
+port="5432"
+database="wordle"
