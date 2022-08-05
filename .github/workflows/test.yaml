@@ -28,6 +28,16 @@ jobs:
           python-version: 3.8.10
       - name: Install dependencies
         run: pip install -r backend/requirements.txt
+      - name: Install postgres client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends postgresql-client
+      - name: Run DB migrations
+        run: |
+          psql -h localhost -U wordle -d wordle -f db-migrations/01.sql
+          psql -h localhost -U wordle -d wordle -f db-migrations/02.sql
+        env:
+          PGPASSWORD: wordle
       - name: Test with pytest
         run: |
           mv settings-github-actions.toml settings-test.toml
