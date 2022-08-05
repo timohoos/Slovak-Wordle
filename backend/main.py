@@ -1,22 +1,41 @@
-from flask import Flask, Blueprint, jsonify, current_app
+from flask import Flask, Blueprint, current_app, request
 from sqlalchemy import create_engine
 import os.path
 import toml
 
 
-bp = Blueprint('new-game', __name__)
+bp = Blueprint("main", __name__, url_prefix="/")
+dummy_sid = "84984416189"
+
 
 @bp.post("/new-game")
 def new_game():
-    dummy_sid = '84984416189'
-
     with current_app.db.connect() as connection:
-        word = connection.execute("select * from words order by random() limit 1").fetchall()[0][1]
-        if (connection.execute("select count(*) from games WHERE session_id = %s", [dummy_sid,]).fetchall()[0][0]) > 0:
+        word = connection.execute("select * from words order by random() limit 1").fetchall()[0]["word"]
+        if (connection.execute("select count(*) from games where session_id = %s", [dummy_sid,]).fetchall()[0][0]) > 0:
             connection.execute("update games set word = %s, guesses = %s where session_id = %s", (word, [], dummy_sid))
         else:
             connection.execute("insert into games (session_id, word, guesses) values(%s, %s, %s)", (dummy_sid, word, []))
-    return jsonify({"state": "started"})
+    return {"state": "started"}
+
+
+@bp.post("/guess")
+def guess():
+    with current_app.db.connect() as connection:
+
+        guess = request.get_json()["guess"].lower()
+
+        if (connection.execute("select count(*) from words where word = %s", [guess,]).fetchall()[0][0]) == 0:
+            return {"status": "word not valid"}
+
+        connection.execute("update games set guesses = array_append(guesses, %s) where session_id = %s", (guess, dummy_sid))
+        guesses = connection.execute("select * from games where session_id = %s", [dummy_sid,]).fetchall()[0]["guesses"]
+
+        #get game status here
+
+        status = {"status": "ok"}
+
+        return status
 
 
 def create_app(settings=None):
@@ -29,6 +48,6 @@ def create_app(settings=None):
     return app
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = create_app()
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host="0.0.0.0", port=5001)
