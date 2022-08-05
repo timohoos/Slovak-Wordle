@@ -6,47 +6,47 @@ class Game:
         self.word = word
         self.correct = False
         self.overall_state = {
-            "ĺ": "not used",
-            "ľ": "not used",
-            "š": "not used",
-            "č": "not used",
-            "ť": "not used",
-            "ž": "not used",
-            "ď": "not used",
-            "ý": "not used",
-            "á": "not used",
-            "é": "not used",
-            "ó": "not used",
-            "q": "not used",
-            "w": "not used",
-            "e": "not used",
-            "r": "not used",
-            "t": "not used",
-            "z": "not used",
-            "u": "not used",
-            "i": "not used",
-            "o": "not used",
-            "p": "not used",
-            "ú": "not used",
-            "ä": "not used",
             "a": "not used",
-            "s": "not used",
+            "b": "not used",
+            "c": "not used",
             "d": "not used",
+            "e": "not used",
             "f": "not used",
             "g": "not used",
             "h": "not used",
+            "i": "not used",
             "j": "not used",
             "k": "not used",
             "l": "not used",
-            "ô": "not used",
-            "ň": "not used",
-            "y": "not used",
-            "x": "not used",
-            "c": "not used",
-            "v": "not used",
-            "b": "not used",
+            "m": "not used",
             "n": "not used",
-            "m": "not used"
+            "o": "not used",
+            "p": "not used",
+            "q": "not used",
+            "r": "not used",
+            "s": "not used",
+            "t": "not used",
+            "u": "not used",
+            "v": "not used",
+            "w": "not used",
+            "x": "not used",
+            "y": "not used",
+            "z": "not used",
+            "á": "not used",
+            "ä": "not used",
+            "é": "not used",
+            "í": "not used",
+            "ó": "not used",
+            "ô": "not used",
+            "ú": "not used",
+            "ý": "not used",
+            "č": "not used",
+            "ď": "not used",
+            "ĺ": "not used",
+            "ľ": "not used",
+            "ň": "not used",
+            "ť": "not used",
+            "ž": "not used"
         }
         self.guesses_state = []
 
@@ -82,7 +82,11 @@ class Game:
         letter_count = Counter(self.word)
         self.correct = self.check_word(guess, letter_count, guess_state)
         self.check_letters(guess, letter_count, guess_state)
-        self.guesses_state.append(guess_state)
+        guess_info = {
+            "guess": guess,
+            "guess_state": guess_state
+        }
+        self.guesses_state.append(guess_info)
 
     def add_guesses(self, guesses):
         for guess in guesses:

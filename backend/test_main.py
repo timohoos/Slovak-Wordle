@@ -49,7 +49,8 @@ def test_guess(app, client):
         assert response.json["game"]["overall_state"]["a"] == "correct placement"
         assert response.json["game"]["overall_state"]["r"] == "not present"
         assert response.json["game"]["overall_state"]["č"] == "not used"
-        assert response.json["game"]["guesses"][0][4] == "correct placement"
+        assert response.json["game"]["guesses"][0]["guess_state"][4] == "correct placement"
+        assert response.json["game"]["guesses"][0]["guess"] == "srnka"
         response = client.post("/guess", data=json.dumps({"guess": "strom"}), content_type="application/json")
         assert response.status_code == 200
         assert response.json["status"] == "invalid word"
@@ -58,7 +59,8 @@ def test_guess(app, client):
         response = client.post("/guess", data=json.dumps({"guess": "alica"}), content_type="application/json")
         assert response.status_code == 200
         assert response.json["status"] == "ongoing"
-        assert response.json["game"]["guesses"][1][0] == "wrong placement"
+        assert response.json["game"]["guesses"][1]["guess_state"][0] == "wrong placement"
+        assert response.json["game"]["guesses"][1]["guess"] == "alica"
         assert response.json["game"]["overall_state"]["k"] == "correct placement"
         connection.execute("insert into words (word) values (%s)", "slama")
         response = client.post("/guess", data=json.dumps({"guess": "SLAMA"}), content_type="application/json")
@@ -66,7 +68,9 @@ def test_guess(app, client):
         assert response.json["status"] == "ongoing"
         assert response.json["game"]["overall_state"]["l"] == "not present"
         assert response.json["game"]["overall_state"]["h"] == "not used"
-        assert response.json["game"]["guesses"][2][2] == "wrong placement"
+        assert response.json["game"]["guesses"][2]["guess"] == "slama"
+        assert response.json["game"]["guesses"][2]["guess_state"][2] == "wrong placement"
         response = client.post("/guess", data=json.dumps({"guess": "mačka"}), content_type="application/json")
         assert response.status_code == 200
+        assert response.json["game"]["guesses"][3]["guess"] == "mačka"
         assert response.json["status"] == "finished"

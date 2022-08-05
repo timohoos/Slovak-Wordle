@@ -31,25 +31,13 @@ def guess():
         game.add_guesses(guesses)
 
         if (connection.execute("select count(*) from words where word = %s", [guess]).fetchall()[0][0]) == 0:
-            return {
-                "status": "invalid word",
-                "game": {
-                    "guesses": game.guesses_state,
-                    "overall_state": game.overall_state
-                }
-            }
+            return get_state(game)
 
         connection.execute("update games set guesses = array_append(guesses, %s) where session_id = %s", (guess, dummy_sid))
 
         game.add_guess(guess)
 
-        return {
-            "status": "finished" if game.correct else "ongoing",
-            "game": {
-                "guesses": game.guesses_state,
-                "overall_state": game.overall_state
-            }
-        }
+        return get_state(game, game.correct)
 
 
 def create_app(settings=None):
@@ -60,6 +48,21 @@ def create_app(settings=None):
     db_string = f"postgresql+psycopg2://{settings['database']['user']}:{settings['database']['password']}@{settings['database']['host']}:{settings['database']['port']}/{settings['database']['database']}"
     app.db = create_engine(db_string, pool_size=20)
     return app
+
+
+def get_state(game, correct=None):
+    if correct is None:
+        status = "invalid word"
+    else:
+        status = "finished" if game.correct else "ongoing"
+
+    return {
+        "status": status,
+        "game": {
+            "guesses": game.guesses_state,
+            "overall_state": game.overall_state
+        }
+    }
 
 
 if __name__ == "__main__":
