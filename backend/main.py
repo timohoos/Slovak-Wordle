@@ -1,3 +1,4 @@
+from game import Game
 from flask import Flask, Blueprint, current_app, request
 from sqlalchemy import create_engine
 import os.path
@@ -23,17 +24,23 @@ def new_game():
 def guess():
     with current_app.db.connect() as connection:
 
-        guess = request.get_json()["guess"].lower()
+        guess = request.get_json()["guess"].casefold()
+        data = connection.execute("select * from games where session_id = %s", [dummy_sid,]).fetchall()
+        guesses, word = data[0]["guesses"], data[0]["word"]
 
         if (connection.execute("select count(*) from words where word = %s", [guess,]).fetchall()[0][0]) == 0:
-            return {"status": "word not valid"}
+
+            game = Game(word, guesses)
+            status = game.get_game_state()
+            status["status"] = "invalid word"
+
+            return status
 
         connection.execute("update games set guesses = array_append(guesses, %s) where session_id = %s", (guess, dummy_sid))
-        guesses = connection.execute("select * from games where session_id = %s", [dummy_sid,]).fetchall()[0]["guesses"]
+        guesses.append(guess)
 
-        #get game status here
-
-        status = {"status": "ok"}
+        game = Game(word, guesses)
+        status = game.get_game_state()
 
         return status
 
