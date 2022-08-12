@@ -3,6 +3,7 @@ from flask import Flask, Blueprint, current_app, request
 from sqlalchemy import create_engine
 import os.path
 import toml
+from flask_cors import CORS
 
 
 bp = Blueprint("main", __name__, url_prefix="/")
@@ -42,6 +43,7 @@ def guess():
 
 def create_app(settings=None):
     app = Flask(__name__)
+    CORS(app)
     app.register_blueprint(bp)
     if settings is None:
         settings = (toml.load(os.path.dirname(__file__) + "/../settings.toml"))

@@ -1,5 +1,6 @@
 pytest==7.1.2
 flask==2.2.1
+Flask-Cors==3.0.10
 sqlalchemy==1.4.39
 psycopg2==2.9.3
 toml==0.10.2
