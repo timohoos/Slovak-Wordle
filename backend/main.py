@@ -43,7 +43,7 @@ def guess():
 
 def create_app(settings=None):
     app = Flask(__name__)
-    CORS(app)
+    CORS(app, origins=["http://localhost:3000", "http://localhost:3001"], supports_credentials=True)
     app.register_blueprint(bp)
     if settings is None:
         settings = (toml.load(os.path.dirname(__file__) + "/../settings.toml"))
