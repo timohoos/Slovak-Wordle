@@ -3,33 +3,52 @@ body {
     margin: 20px;
 }
 
-ol, ul {
-    padding-left: 30px;
-}
-
-.board-row:after {
-    clear: both;
-    content: "";
-    display: table;
-}
-
-.status {
-    margin-bottom: 10px;
-}
-
 .square {
     background: #fff;
     border: 1px solid #999;
     float: left;
-    font-size: 24px;
+    font-size: 20px;
     font-weight: bold;
-    line-height: 34px;
-    height: 34px;
+    line-height: 30px;
+    height: 30px;
+    width: 30px;
     margin-right: -1px;
     margin-top: -1px;
     padding: 0;
     text-align: center;
-    width: 34px;
+}
+
+.rectangle {
+    background: #fff;
+    border: 1px solid #999;
+    float: left;
+    font-size: 20px;
+    font-weight: bold;
+    line-height: 30px;
+    height: 30px;
+    width: 140px;
+    margin-right: -1px;
+    margin-top: -1px;
+    padding: 0;
+    text-align: center;
+}
+
+.message{
+    font-size: 20px;
+    font-weight: bold;
+    line-height: 30px;
+}
+
+.not-present {
+    background: gray;
+}
+
+.correct {
+    background: green;
+}
+
+.incorrect {
+    background: orange;
 }
 
 .square:focus {
@@ -43,8 +62,6 @@ ol, ul {
 .game {
     display: flex;
     flex-direction: row;
-}
-
-.game-info {
-    margin-left: 20px;
+    justify-content: space-between;
+    align-content: center;
 }

@@ -10,11 +10,13 @@ class State(str, Enum):
 
 
 class Game:
+    MAX_GUESSES = 6
+
     def __init__(self, word):
         self.word = word
         self.correct = False
         self.overall_state = {letter: State.NOT_USED for letter in
-                              "abcdefghijklmnopqrstuvwxyzáäéíóôúýčďĺľňťž"}
+                              "aáäbcčdďeéfghiíjklĺľmnňoóôpqrŕsštťuúvwxyýzž"}
         self.guesses_state = []
 
     def check_word(self, guess, letter_count, guess_state):

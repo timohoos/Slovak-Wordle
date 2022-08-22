@@ -1,3 +1,4 @@
+from time import sleep
 from game import Game
 from flask import Flask, Blueprint, current_app, request
 from sqlalchemy import create_engine
@@ -18,7 +19,27 @@ def new_game():
             connection.execute("update games set word = %s, guesses = %s where session_id = %s", (word, [], dummy_sid))
         else:
             connection.execute("insert into games (session_id, word, guesses) values(%s, %s, %s)", (dummy_sid, word, []))
-    return {"state": "started"}
+    return {"status": "started"}
+
+
+@bp.post("/get-game")
+def get_game():
+    with current_app.db.connect() as connection:
+        data = connection.execute("select * from games where session_id = %s", [dummy_sid]).fetchall()
+        word = ""
+        if len(data) > 0:
+            guesses, word = data[0]["guesses"], data[0]["word"]
+
+            game = Game(word)
+            game.add_guesses(guesses)
+
+        else:
+            game = Game(word)
+
+        state = get_state(game, game.correct)
+        if word == "":
+            state["status"] = "waiting"
+        return state
 
 
 @bp.post("/guess")
@@ -32,13 +53,12 @@ def guess():
         game.add_guesses(guesses)
 
         if (connection.execute("select count(*) from words where word = %s", [guess]).fetchall()[0][0]) == 0:
-            return get_state(game)
+            return {**get_state(game), "status": "invalid word"}
 
         connection.execute("update games set guesses = array_append(guesses, %s) where session_id = %s", (guess, dummy_sid))
 
         game.add_guess(guess)
-
-        return get_state(game, game.correct)
+        return get_state(game)
 
 
 def create_app(settings=None):
@@ -52,11 +72,14 @@ def create_app(settings=None):
     return app
 
 
-def get_state(game, correct=None):
-    if correct is None:
-        status = "invalid word"
+def get_state(game):
+
+    if game.correct:
+        status = "won"
+    elif len(game.guesses_state) == Game.MAX_GUESSES:
+        status = "lost"
     else:
-        status = "finished" if game.correct else "ongoing"
+        status = "ongoing"
 
     return {
         "status": status,

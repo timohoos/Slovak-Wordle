@@ -33,7 +33,7 @@ def test_new_game(app, client):
         connection.execute("insert into words (word) values (%s)", "srnka")
         response = client.post("/new-game")
         assert response.status_code == 200
-        assert response.json["state"] == "started"
+        assert response.json["status"] == "started"
         assert connection.execute("select word from games").fetchall()[0]["word"] == "srnka"
 
 
@@ -73,4 +73,4 @@ def test_guess(app, client):
         response = client.post("/guess", data=json.dumps({"guess": "mačka"}), content_type="application/json")
         assert response.status_code == 200
         assert response.json["game"]["guesses"][3]["guess"] == "mačka"
-        assert response.json["status"] == "finished"
+        assert response.json["status"] == "won"
