@@ -1,4 +1,3 @@
-from time import sleep
 from game import Game
 from flask import Flask, Blueprint, current_app, request
 from sqlalchemy import create_engine
