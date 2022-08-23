@@ -166,21 +166,25 @@ export class Game extends React.Component {
 
     render() {
         return (
-            <div className='game'>
+            <div className='flex flex-col justify-between h-screen'>
+                <div className='w-full text-center py-3 border-b-2 border-gray-300'>
+                    <h1 className='text-3xl font-bold'>Slovo dňa</h1>
+                </div>
                 <div>
+                    <div className='message'>
+                        {this.state.message}
+                    </div>
                     <Board words={this.state.words}/>
+                    {(this.state.message === 'You Won!' || this.state.message === 'You Lost!') && <div>
+                    <button className='rectangle' onClick={() => this.handleNewGame()}>
+                        New Game
+                    </button>
+                    </div>}
                 </div>
                 <div>
                     <Keyboard keys={this.state.keys} onClick={(key) => this.handleClick(key)}/>
                 </div>
-                <div className='message'>
-                    {this.state.message}
-                </div>
-                {(this.state.message === 'You Won!' || this.state.message === 'You Lost!') && <div>
-                <button className='rectangle' onClick={() => this.handleNewGame()}>
-                    New Game
-                </button>
-                </div>}
+                
             </div>
         );
     }

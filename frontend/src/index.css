@@ -1,42 +1,13 @@
-body {
-    font: 14px "Century Gothic", Futura, sans-serif;
-    margin: 20px;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.tile.empty {
+    @apply border-2 border-gray-300;
 }
 
-.square {
-    background: #fff;
-    border: 1px solid #999;
-    float: left;
-    font-size: 20px;
-    font-weight: bold;
-    line-height: 30px;
-    height: 30px;
-    width: 30px;
-    margin-right: -1px;
-    margin-top: -1px;
-    padding: 0;
-    text-align: center;
-}
-
-.rectangle {
-    background: #fff;
-    border: 1px solid #999;
-    float: left;
-    font-size: 20px;
-    font-weight: bold;
-    line-height: 30px;
-    height: 30px;
-    width: 140px;
-    margin-right: -1px;
-    margin-top: -1px;
-    padding: 0;
-    text-align: center;
-}
-
-.message{
-    font-size: 20px;
-    font-weight: bold;
-    line-height: 30px;
+.key.empty {
+    @apply bg-gray-300;
 }
 
 .not-present {
@@ -49,19 +20,4 @@ body {
 
 .incorrect {
     background: orange;
-}
-
-.square:focus {
-    outline: none;
-}
-
-.kbd-navigation .square:focus {
-    background: #ddd;
-}
-
-.game {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-content: center;
 }

@@ -6,5 +6,5 @@ export function getStateColor(state) {
     } else if (state === 'correct placement'){
         return 'correct';
     }
-    return '';
+    return 'empty';
 }
