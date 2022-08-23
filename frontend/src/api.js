@@ -28,3 +28,20 @@ export async function guessWord(guess) {
         console.error('Error: ', error)
     }
 }
+
+
+export async function getGame() {
+    try {
+        const response = await fetch('http://localhost:5001/get-game', {
+            method: 'POST',
+            credentials: 'include', //to send cookies on cross origin request
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        })
+        return await response.json();
+    } catch(error) {
+        console.error('Error: ', error)
+    }
+}

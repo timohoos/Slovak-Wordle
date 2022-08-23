@@ -31,7 +31,8 @@ export class Game extends React.Component {
 
     async componentDidMount() {
         this.waitingForReq = true;
-        api.startNewGame()
+        const data = await api.getGame();
+        this.loadGame(data.game.guesses, data.game.overall_state);
         this.waitingForReq = false;
         document.addEventListener('keydown', this.keydownListener);
     }
@@ -57,20 +58,43 @@ export class Game extends React.Component {
         return alphabet.includes(value.toLowerCase())
     }
 
+
+    loadGame(guesses, overallState) {
+        let stateCopy = cloneDeep(this.state);
+        guesses.forEach((guess, wordIdx) => {
+            guess.guess_state.forEach((valueState, tileIdx) => {
+                stateCopy.words[wordIdx].tiles[tileIdx].state = valueState
+            });
+            stateCopy.keys.forEach((key) => {
+                key.state = overallState[key.value]
+            });
+
+            stateCopy.words[wordIdx].submitted = true;
+            guess.guess.split('').forEach((value, valueIdx) => {
+                stateCopy.words[wordIdx].tiles[valueIdx].value = value;
+            });
+        });
+
+        this.setState(stateCopy);
+    }
+
     updateState(guess, wordIndex, overallState, message) {
         let stateCopy = cloneDeep(this.state);
-        for (let i = 0; i < guess.guess_state.length; i++) { //write as foreach
-            stateCopy.words[wordIndex].tiles[i].state = guess.guess_state[i]
-        }
-        for (let i = 0; i < stateCopy.keys.length; i++) { //write as foreach
-            let value = stateCopy.keys[i].value
-            stateCopy.keys[i].state = overallState[value] 
-        }
+
+        guess.guess_state.forEach((valueState, tileIdx) => {
+            stateCopy.words[wordIndex].tiles[tileIdx].state = valueState
+        });
+
+        stateCopy.keys.forEach((key) => {
+            key.state = overallState[key.value]
+        });
+
         stateCopy.words[wordIndex].submitted = true;
 
         if (message) {
             stateCopy.message = message;
         }
+
         this.setState(stateCopy);
     }
 
@@ -90,10 +114,10 @@ export class Game extends React.Component {
         if (this.state.message === 'You Won!' || this.state.message === 'You Lost!' || this.waitingForReq) {
             return;
         }
-
+        
         const wordIndex = this.state.words.findIndex((word) => !word.submitted);
         const tileIndex = this.state.words[wordIndex].tiles.findIndex((value) => value.value === null);
-
+        
         if (value === 'Enter') {
             if (this.state.words[wordIndex].tiles[4].value === null) {
                 this.updateMessage('Not enough letters!');
@@ -102,6 +126,7 @@ export class Game extends React.Component {
             const guess = this.state.words[wordIndex].tiles.map((tile) => tile.value).join('');
             this.waitingForReq = true;
             const data = await api.guessWord(guess)
+            console.log(data);
             this.waitingForReq = false;
             if (data.status !== 'invalid word') {
                 let message;
