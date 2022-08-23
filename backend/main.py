@@ -24,21 +24,19 @@ def new_game():
 @bp.post("/get-game")
 def get_game():
     with current_app.db.connect() as connection:
+        guesses, word = [], None
+
         data = connection.execute("select * from games where session_id = %s", [dummy_sid]).fetchall()
-        word = ""
         if len(data) > 0:
             guesses, word = data[0]["guesses"], data[0]["word"]
-
-            game = Game(word)
-            game.add_guesses(guesses)
-
         else:
-            game = Game(word)
+            word = connection.execute("select * from words order by random() limit 1").fetchall()[0]["word"]
+            connection.execute("insert into games (session_id, word, guesses) values(%s, %s, %s)", (dummy_sid, word, []))
 
-        state = get_state(game, game.correct)
-        if word == "":
-            state["status"] = "waiting"
-        return state
+        game = Game(word)
+        game.add_guesses(guesses)
+
+        return get_state(game)
 
 
 @bp.post("/guess")

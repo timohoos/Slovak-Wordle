@@ -74,3 +74,27 @@ def test_guess(app, client):
         assert response.status_code == 200
         assert response.json["game"]["guesses"][3]["guess"] == "mačka"
         assert response.json["status"] == "won"
+
+
+def test_get_game(app, client):
+    with app.db.connect() as connection:
+        connection.execute("truncate table words")
+        connection.execute("insert into words (word) values (%s)", "mačka")
+        client.post("/new-game")
+        connection.execute("insert into words (word) values (%s)", "srnka")
+        client.post("/guess", data=json.dumps({"guess": "srnka"}), content_type="application/json")
+        response = client.post("/get-game")
+        assert response.status_code == 200
+        assert response.json["status"] == "ongoing"
+        assert response.json["game"]["overall_state"]["a"] == "correct placement"
+        assert response.json["game"]["overall_state"]["r"] == "not present"
+        assert response.json["game"]["overall_state"]["č"] == "not used"
+        assert response.json["game"]["guesses"][0]["guess_state"][4] == "correct placement"
+        assert response.json["game"]["guesses"][0]["guess"] == "srnka"
+        connection.execute("truncate table words")
+        connection.execute("truncate table games")
+        connection.execute("insert into words (word) values (%s)", "strom")
+        response = client.post("/get-game")
+        assert response.status_code == 200
+        assert response.json["status"] == "ongoing"
+        assert len(response.json["game"]["guesses"]) == 0
