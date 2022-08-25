@@ -3,7 +3,13 @@
 @tailwind utilities;
 
 .tile.empty {
+    @apply leading-8;
     @apply border-2 border-gray-300;
+}
+
+.tile.not-empty {
+    @apply leading-8;
+    @apply border-2 border-gray-500;
 }
 
 .key.empty {
@@ -11,13 +17,26 @@
 }
 
 .not-present {
-    background: gray;
+    @apply bg-gray-500;
+    @apply text-white;
 }
 
 .correct {
-    background: green;
+    @apply bg-green-600;
+    @apply text-white;
 }
 
 .incorrect {
-    background: orange;
+    @apply bg-amber-300;
+    @apply text-white;
+}
+
+.half-black {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.box1 {
+    background-color: black;
+    color: black;
+    opacity: .7;
 }

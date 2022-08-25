@@ -24,7 +24,7 @@ export class Game extends React.Component {
 
     componentDidUpdate() {
         clearTimeout(this.timeout);
-        if (this.state.message === 'Not enough letters!' || this.state.message === 'Invalid Word!') {
+        if (this.state.message === 'Nedostatok písmen' || this.state.message === 'Neplatné slovo') {
             this.timeout = setTimeout(() => this.setState({message:''}), 3000);
         }
     }
@@ -32,8 +32,8 @@ export class Game extends React.Component {
     async componentDidMount() {
         this.waitingForReq = true;
         const data = await api.getGame();
-        this.loadGame(data.game.guesses, data.game.overall_state);
         this.waitingForReq = false;
+        this.loadGame(data.game.guesses, data.game.overall_state, data.status);
         document.addEventListener('keydown', this.keydownListener);
     }
 
@@ -59,7 +59,20 @@ export class Game extends React.Component {
     }
 
 
-    loadGame(guesses, overallState) {
+    async getMessage(status) {
+        if (status === 'won') {
+            return 'Vyhral si';
+        } else if (status === 'lost') {
+            this.waitingForReq = true;
+            const data = await api.getWord();
+            this.waitingForReq = false;
+            return `Prehral si, tvoje slovo bolo: ${data.word}`;
+        }
+        return '';
+    }
+
+
+    async loadGame(guesses, overallState, status) {
         let stateCopy = cloneDeep(this.state);
         guesses.forEach((guess, wordIdx) => {
             guess.guess_state.forEach((valueState, tileIdx) => {
@@ -74,7 +87,7 @@ export class Game extends React.Component {
                 stateCopy.words[wordIdx].tiles[valueIdx].value = value;
             });
         });
-
+        stateCopy.message = await this.getMessage(status);
         this.setState(stateCopy);
     }
 
@@ -111,33 +124,28 @@ export class Game extends React.Component {
     }
 
     async handleEvent(value) {
-        if (this.state.message === 'You Won!' || this.state.message === 'You Lost!' || this.waitingForReq) {
+        if (this.state.message === 'Vyhral si' || this.state.message.slice(0, 10) === 'Prehral si' || this.waitingForReq) {
             return;
         }
-        
+
+
         const wordIndex = this.state.words.findIndex((word) => !word.submitted);
         const tileIndex = this.state.words[wordIndex].tiles.findIndex((value) => value.value === null);
-        
+
         if (value === 'Enter') {
             if (this.state.words[wordIndex].tiles[4].value === null) {
-                this.updateMessage('Not enough letters!');
+                this.updateMessage('Nedostatok písmen');
                 return;
             }
             const guess = this.state.words[wordIndex].tiles.map((tile) => tile.value).join('');
             this.waitingForReq = true;
             const data = await api.guessWord(guess)
-            console.log(data);
             this.waitingForReq = false;
             if (data.status !== 'invalid word') {
-                let message;
-                if (data.status === 'won') {
-                    message = 'You Won!';
-                } else if (data.status === 'lost') {
-                    message = 'You Lost!';
-                }
+                const message = await this.getMessage(data.status);
                 this.updateState(data.game.guesses[wordIndex], wordIndex, data.game.overall_state, message);
             } else {
-                this.updateMessage('Invalid Word!');
+                this.updateMessage('Neplatné slovo');
             }
         } else if (value === 'Backspace' && tileIndex !== 0) {
             const removeTileIndex = (tileIndex === -1) ? 4 : tileIndex - 1;
@@ -169,22 +177,25 @@ export class Game extends React.Component {
             <div className='flex flex-col justify-between h-screen'>
                 <div className='w-full text-center py-3 border-b-2 border-gray-300'>
                     <h1 className='text-3xl font-bold'>Slovo dňa</h1>
+                    {this.state.message !== '' &&
+                    <div className='absolute top-[4.5rem] left-1/2 transform -translate-x-1/2 z-10'>
+                        <p className='text-white text-xl bg-gray-700 text-center px-2 py-2 rounded-md'>
+                            {this.state.message}
+                        </p>
+                    </div>}
                 </div>
-                <div>
-                    <div className='message'>
-                        {this.state.message}
-                    </div>
+                <div className='relative z-0'>
                     <Board words={this.state.words}/>
-                    {(this.state.message === 'You Won!' || this.state.message === 'You Lost!') && <div>
-                    <button className='rectangle' onClick={() => this.handleNewGame()}>
-                        New Game
-                    </button>
+                    {(this.state.message === 'Vyhral si' || this.state.message.slice(0, 10) === 'Prehral si') && //add status to state
+                    <div className='absolute bottom-[-6rem] left-1/2 transform -translate-x-1/2'>
+                        <button className='text-2xl text-center text-white bg-gray-700 w-36 h-16 rounded' onClick={() => this.handleNewGame()}>
+                            Nová hra
+                        </button>
                     </div>}
                 </div>
                 <div>
                     <Keyboard keys={this.state.keys} onClick={(key) => this.handleClick(key)}/>
                 </div>
-                
             </div>
         );
     }

@@ -5,7 +5,7 @@ import { getStateColor } from './utils';
 class Tile extends React.Component {
     render() {
         return (
-            <div className={`p-2 text-4xl font-semibold text-center leading-none basis-1/5 tile ${getStateColor(this.props.state)}`}>
+            <div className={`p-2 text-4xl font-semibold text-center leading-none basis-1/5 tile ${getStateColor(this.props.state, this.props.value)}`}>
                 {this.props.value?.toUpperCase()}
             </div>
         )
