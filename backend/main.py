@@ -1,24 +1,55 @@
+from distutils.log import error
 from game import Game
-from flask import Flask, Blueprint, current_app, request
+from flask import Flask, Blueprint, current_app, request, jsonify
 from sqlalchemy import create_engine
 import os.path
 import toml
+from uuid import uuid4
 from flask_cors import CORS
 
 
 bp = Blueprint("main", __name__, url_prefix="/")
-dummy_sid = "84984416189"
+
+
+@bp.post("/get-word")
+def get_word():
+    session_id = request.cookies.get("session_id")
+    if not session_id:
+        return ({"status": "400 Bad Request"}, 400)
+
+    with current_app.db.connect() as connection:
+        guesses, word = [], None
+
+        games_rows = connection.execute("select * from games where session_id = %s", [session_id]).fetchall()
+        if len(games_rows) == 0:
+            return ({"status": "400 Bad Request"}, 400)
+
+        guesses, word = games_rows[0]["guesses"], games_rows[0]["word"]
+        game = Game(word)
+        game.add_guesses(guesses)
+
+        state = get_state(game)
+        if state["status"] == "ongoing":
+            return ({"status": "400 Bad Request"}, 400)
+
+        return {"word": word}
 
 
 @bp.post("/new-game")
 def new_game():
+    response = jsonify({"status": "started"})
+    session_id = request.cookies.get("session_id")
+    if not session_id:
+        session_id = str(uuid4())
+        response.set_cookie("session_id", session_id)
+
     with current_app.db.connect() as connection:
         word = connection.execute("select * from words order by random() limit 1").fetchall()[0]["word"]
-        if (connection.execute("select count(*) from games where session_id = %s", [dummy_sid,]).fetchall()[0][0]) > 0:
-            connection.execute("update games set word = %s, guesses = %s where session_id = %s", (word, [], dummy_sid))
+        if (connection.execute("select count(*) from games where session_id = %s", [session_id,]).fetchall()[0][0]) > 0:
+            connection.execute("update games set word = %s, guesses = %s where session_id = %s", (word, [], session_id))
         else:
-            connection.execute("insert into games (session_id, word, guesses) values(%s, %s, %s)", (dummy_sid, word, []))
-    return {"status": "started"}
+            connection.execute("insert into games (session_id, word, guesses) values(%s, %s, %s)", (session_id, word, []))
+    return response
 
 
 @bp.post("/get-game")
@@ -26,25 +57,38 @@ def get_game():
     with current_app.db.connect() as connection:
         guesses, word = [], None
 
-        data = connection.execute("select * from games where session_id = %s", [dummy_sid]).fetchall()
-        if len(data) > 0:
-            guesses, word = data[0]["guesses"], data[0]["word"]
-        else:
+        response = None
+        session_id = request.cookies.get("session_id")
+        if not session_id:
             word = connection.execute("select * from words order by random() limit 1").fetchall()[0]["word"]
-            connection.execute("insert into games (session_id, word, guesses) values(%s, %s, %s)", (dummy_sid, word, []))
+            session_id = str(uuid4())
+            response = jsonify(get_state(Game(word)))
+            response.set_cookie("session_id", session_id)
+            connection.execute("insert into games (session_id, word, guesses) values(%s, %s, %s)", (session_id, word, []))
+        else:
+            games_rows = connection.execute("select * from games where session_id = %s", [session_id]).fetchall()
+            if len(games_rows) == 0:
+                return ({"status": "400 Bad Request"}, 400)
 
-        game = Game(word)
-        game.add_guesses(guesses)
+            guesses, word = games_rows[0]["guesses"], games_rows[0]["word"]
+            game = Game(word)
+            game.add_guesses(guesses)
+            response = get_state(game)
 
-        return get_state(game)
+        return response
 
 
 @bp.post("/guess")
 def guess():
     with current_app.db.connect() as connection:
+        session_id = request.cookies.get("session_id")
+
+        if not session_id:
+            return ({"status": "400 Bad Request"}, 400)
+
         guess = request.get_json()["guess"].casefold()
-        data = connection.execute("select * from games where session_id = %s", [dummy_sid]).fetchall()
-        guesses, word = data[0]["guesses"], data[0]["word"]
+        games_rows = connection.execute("select * from games where session_id = %s", [session_id]).fetchall()
+        guesses, word = games_rows[0]["guesses"], games_rows[0]["word"]
 
         game = Game(word)
         game.add_guesses(guesses)
@@ -52,7 +96,7 @@ def guess():
         if (connection.execute("select count(*) from words where word = %s", [guess]).fetchall()[0][0]) == 0:
             return {**get_state(game), "status": "invalid word"}
 
-        connection.execute("update games set guesses = array_append(guesses, %s) where session_id = %s", (guess, dummy_sid))
+        connection.execute("update games set guesses = array_append(guesses, %s) where session_id = %s", (guess, session_id))
 
         game.add_guess(guess)
         return get_state(game)

@@ -95,6 +95,5 @@ def test_get_game(app, client):
         connection.execute("truncate table games")
         connection.execute("insert into words (word) values (%s)", "strom")
         response = client.post("/get-game")
-        assert response.status_code == 200
-        assert response.json["status"] == "ongoing"
-        assert len(response.json["game"]["guesses"]) == 0
+        assert response.status_code == 400
+        assert response.json["status"] == "400 Bad Request"
