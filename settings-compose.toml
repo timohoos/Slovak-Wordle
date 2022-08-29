@@ -1,0 +1,6 @@
+[database]
+user="wordle"
+password="secret"
+host="db-postgres"
+port="5432"
+database="wordle"

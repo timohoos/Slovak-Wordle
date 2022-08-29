@@ -1,5 +1,10 @@
+function baseURL() {
+    return process.env.REACT_APP_BACKEND_URL || "http://localhost:5001";
+}
+
+
 export function startNewGame() {
-    fetch('http://localhost:5001/new-game', {
+    fetch(`${baseURL()}/new-game`, {
         method: 'POST',
         credentials: 'include', //to send cookies on cross origin request
         headers: {
@@ -14,7 +19,7 @@ export function startNewGame() {
 
 export async function guessWord(guess) {
     try {
-        const response = await fetch('http://localhost:5001/guess', {
+        const response = await fetch(`${baseURL()}/guess`, {
             method: 'POST',
             credentials: 'include', //to send cookies on cross origin request
             headers: {
@@ -32,7 +37,7 @@ export async function guessWord(guess) {
 
 export async function getGame() {
     try {
-        const response = await fetch('http://localhost:5001/get-game', {
+        const response = await fetch(`${baseURL()}/get-game`, {
             method: 'POST',
             credentials: 'include', //to send cookies on cross origin request
             headers: {
@@ -49,7 +54,7 @@ export async function getGame() {
 
 export async function getWord() {
     try {
-        const response = await fetch('http://localhost:5001/get-word', {
+        const response = await fetch(`${baseURL()}/get-word`, {
             method: 'POST',
             credentials: 'include', //to send cookies on cross origin request
             headers: {
