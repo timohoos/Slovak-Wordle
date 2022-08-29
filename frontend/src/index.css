@@ -30,13 +30,3 @@
     @apply bg-amber-300;
     @apply text-white;
 }
-
-.half-black {
-    background: rgba(0, 0, 0, 0.5);
-}
-
-.box1 {
-    background-color: black;
-    color: black;
-    opacity: .7;
-}
