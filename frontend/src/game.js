@@ -185,21 +185,19 @@ export class Game extends React.Component {
             <div className='flex flex-col justify-between h-screen'>
                 <div className='w-full text-center py-3 border-b-2 border-gray-300'>
                     <h1 className='text-3xl font-bold'>Slovo dňa</h1>
-                    {this.state.status !== 'ongoing' &&
                     <div className='absolute top-[4.5rem] left-1/2 transform -translate-x-1/2 z-10'>
-                        <p className='text-white text-xl bg-gray-700 text-center px-2 py-2 rounded-md'>
+                        <p className={`text-white text-xl bg-gray-700 text-center px-2 py-2 rounded-md transition-opacity ease-in-out duration-300 ${this.state.status !== 'ongoing' ? 'opacity-100' : 'opacity-0'}`}>
                             {this.state.message}
                         </p>
-                    </div>}
+                    </div>
                 </div>
                 <div className='relative z-0'>
                     <Board words={this.state.words}/>
-                    {(this.state.status === 'won' || this.state.status === 'lost') &&
                     <div className='absolute bottom-[-6rem] left-1/2 transform -translate-x-1/2'>
-                        <button className='text-2xl text-center text-white bg-gray-700 w-36 h-16 rounded' onClick={() => this.handleNewGame()}>
-                            Nová hra
+                        <button className={`text-2xl text-center text-white bg-gray-700 w-36 h-16 rounded transition-opacity ease-in-out duration-300 ${(this.state.status === 'lost' || this.state.status === 'won') ? 'opacity-100' : 'opacity-0'}`} onClick={() => this.handleNewGame()}>
+                            <p>Nová hra</p>
                         </button>
-                    </div>}
+                    </div>
                 </div>
                 <div>
                     <Keyboard keys={this.state.keys} onClick={(key) => this.handleClick(key)}/>
