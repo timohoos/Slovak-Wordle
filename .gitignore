@@ -3,3 +3,4 @@ __pychache__
 settings.toml
 settings-test.toml
 words.dmp
+POSTGRES_PSWD

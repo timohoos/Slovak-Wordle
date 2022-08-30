@@ -5,12 +5,12 @@ services:
     image: proxy
     restart: always
     ports: 
-      - 3000:80
+      - 3001:80
       - 443:443
     build:
       context: ./frontend
       args:
-        BACKEND_URL: http://localhost:3000/api
+        BACKEND_URL: http://localhost:3001/api
 
   backend:
     image: backend
@@ -23,20 +23,22 @@ services:
     image: postgres:12
     restart: always
     environment:
-      POSTGRES_PASSWORD: secret
+      POSTGRES_PASSWORD_FILE: /run/secrets/POSTGRES_PSWD
       POSTGRES_USER: wordle
       POSTGRES_DB: wordle
     volumes:
+      - ./POSTGRES_PSWD:/run/secrets/POSTGRES_PSWD
       - postgres-data:/var/lib/postgresql/data
 
   db-migrations:
     image: postgres:12
     restart: "no"
     environment:
-      PGPASSWORD: secret
+      PGPASSWORD_FILE: /run/secrets/POSTGRES_PSWD
       PGUSER: wordle
       PGDB: wordle
     volumes:
+      - ./POSTGRES_PSWD:/run/secrets/POSTGRES_PSWD
       - ./db-setup.sh:/db-setup.sh
       - ./db-migrations:/db-migrations
     command: /db-setup.sh

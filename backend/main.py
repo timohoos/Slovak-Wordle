@@ -1,4 +1,3 @@
-from distutils.log import error
 from game import Game
 from flask import Flask, Blueprint, current_app, request, jsonify
 from sqlalchemy import create_engine
@@ -6,6 +5,7 @@ import os.path
 import toml
 from uuid import uuid4
 from flask_cors import CORS
+from datetime import datetime, timedelta
 
 
 bp = Blueprint("main", __name__, url_prefix="/")
@@ -37,11 +37,9 @@ def get_word():
 
 @bp.post("/new-game")
 def new_game():
-    response = jsonify({"status": "started"})
     session_id = request.cookies.get("session_id")
     if not session_id:
-        session_id = str(uuid4())
-        response.set_cookie("session_id", session_id)
+        return ({"status": "400 Bad Request"}, 400)
 
     with current_app.db.connect() as connection:
         word = connection.execute("select * from words order by random() limit 1").fetchall()[0]["word"]
@@ -49,11 +47,13 @@ def new_game():
             connection.execute("update games set word = %s, guesses = %s where session_id = %s", (word, [], session_id))
         else:
             connection.execute("insert into games (session_id, word, guesses) values(%s, %s, %s)", (session_id, word, []))
-    return response
+
+    return {"status": "started"}
 
 
 @bp.post("/get-game")
 def get_game():
+    expire_date = datetime.now() + timedelta(days=90)
     with current_app.db.connect() as connection:
         guesses, word = [], None
 
@@ -63,18 +63,19 @@ def get_game():
             word = connection.execute("select * from words order by random() limit 1").fetchall()[0]["word"]
             session_id = str(uuid4())
             response = jsonify(get_state(Game(word)))
-            response.set_cookie("session_id", session_id)
             connection.execute("insert into games (session_id, word, guesses) values(%s, %s, %s)", (session_id, word, []))
         else:
             games_rows = connection.execute("select * from games where session_id = %s", [session_id]).fetchall()
             if len(games_rows) == 0:
+                print('y')
                 return ({"status": "400 Bad Request"}, 400)
 
             guesses, word = games_rows[0]["guesses"], games_rows[0]["word"]
             game = Game(word)
             game.add_guesses(guesses)
-            response = get_state(game)
+            response = jsonify(get_state(game))
 
+        response.set_cookie("session_id", session_id, expires=expire_date)
         return response
 
 
