@@ -1,9 +1,9 @@
 FROM node:18-alpine AS build
 WORKDIR /app
-COPY package* .
+COPY package* ./
 RUN npm install
-COPY postcss.config.js .
-COPY tailwind.config.js .
+COPY postcss.config.js ./
+COPY tailwind.config.js ./
 COPY public ./public
 COPY src ./src
 ARG BACKEND_URL
