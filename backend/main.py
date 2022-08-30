@@ -1,3 +1,5 @@
+import json
+from urllib import response
 from game import Game
 from flask import Flask, Blueprint, current_app, request, jsonify
 from sqlalchemy import create_engine
@@ -39,7 +41,7 @@ def get_word():
 def new_game():
     session_id = request.cookies.get("session_id")
     if not session_id:
-        return ({"status": "400 Bad Request"}, 400)
+        session_id = str(uuid4())
 
     with current_app.db.connect() as connection:
         word = connection.execute("select * from words order by random() limit 1").fetchall()[0]["word"]
@@ -48,12 +50,13 @@ def new_game():
         else:
             connection.execute("insert into games (session_id, word, guesses) values(%s, %s, %s)", (session_id, word, []))
 
-    return {"status": "started"}
+    response = jsonify({"status": "started"})
+    response.set_cookie("session_id", session_id, expires=get_expiration_date())
+    return response
 
 
 @bp.post("/get-game")
 def get_game():
-    expire_date = datetime.now() + timedelta(days=90)
     with current_app.db.connect() as connection:
         guesses, word = [], None
 
@@ -67,7 +70,6 @@ def get_game():
         else:
             games_rows = connection.execute("select * from games where session_id = %s", [session_id]).fetchall()
             if len(games_rows) == 0:
-                print('y')
                 return ({"status": "400 Bad Request"}, 400)
 
             guesses, word = games_rows[0]["guesses"], games_rows[0]["word"]
@@ -75,7 +77,7 @@ def get_game():
             game.add_guesses(guesses)
             response = jsonify(get_state(game))
 
-        response.set_cookie("session_id", session_id, expires=expire_date)
+        response.set_cookie("session_id", session_id, expires=get_expiration_date())
         return response
 
 
@@ -112,6 +114,10 @@ def create_app(settings=None):
     db_string = f"postgresql+psycopg2://{settings['database']['user']}:{settings['database']['password']}@{settings['database']['host']}:{settings['database']['port']}/{settings['database']['database']}"
     app.db = create_engine(db_string, pool_size=20)
     return app
+
+
+def get_expiration_date():
+    return datetime.now() + timedelta(days=90)
 
 
 def get_state(game):
